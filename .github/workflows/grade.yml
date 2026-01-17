@@ -1,0 +1,254 @@
+# GitHub Actions Workflow for Logging Stack Challenge
+# ===================================================
+# This workflow runs when students push their solutions.
+# It validates their Loki, Promtail, and Grafana configurations.
+
+name: Grade Logging Stack Challenge
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  grade:
+    name: Validate Logging Configuration
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install pyyaml
+
+      - name: Validate YAML syntax
+        run: |
+          echo "🔍 Validating YAML files..."
+
+          # Check Loki config
+          if [ -f "loki/loki-config.yml" ]; then
+            python -c "import yaml; yaml.safe_load(open('loki/loki-config.yml'))" && \
+              echo "✅ loki/loki-config.yml - Valid YAML" || \
+              echo "❌ loki/loki-config.yml - Invalid YAML"
+          else
+            echo "⚠️ loki/loki-config.yml not found"
+          fi
+
+          # Check Promtail config
+          if [ -f "promtail/promtail-config.yml" ]; then
+            python -c "import yaml; yaml.safe_load(open('promtail/promtail-config.yml'))" && \
+              echo "✅ promtail/promtail-config.yml - Valid YAML" || \
+              echo "❌ promtail/promtail-config.yml - Invalid YAML"
+          else
+            echo "⚠️ promtail/promtail-config.yml not found"
+          fi
+
+          # Check Grafana datasource config
+          if [ -f "grafana/provisioning/datasources/loki.yml" ]; then
+            python -c "import yaml; yaml.safe_load(open('grafana/provisioning/datasources/loki.yml'))" && \
+              echo "✅ grafana/provisioning/datasources/loki.yml - Valid YAML" || \
+              echo "❌ grafana/provisioning/datasources/loki.yml - Invalid YAML"
+          else
+            echo "⚠️ grafana/provisioning/datasources/loki.yml not found"
+          fi
+
+      - name: Check Loki configuration
+        run: |
+          echo "📊 Checking Loki configuration..."
+          python << 'EOF'
+          import yaml
+          import sys
+
+          try:
+              with open('loki/loki-config.yml', 'r') as f:
+                  content = f.read()
+                  # Check if file has actual config (not just comments)
+                  lines = [l for l in content.split('\n') if l.strip() and not l.strip().startswith('#')]
+                  if not lines:
+                      print("❌ Loki config is empty or only has comments")
+                      sys.exit(1)
+
+                  config = yaml.safe_load(content)
+                  if config is None:
+                      print("❌ Loki config is empty")
+                      sys.exit(1)
+
+                  required = ['auth_enabled', 'server', 'common', 'schema_config', 'storage_config']
+                  missing = [r for r in required if r not in config]
+
+                  if missing:
+                      print(f"❌ Missing required sections: {', '.join(missing)}")
+                      sys.exit(1)
+
+                  print("✅ Loki configuration is valid!")
+
+          except FileNotFoundError:
+              print("❌ loki/loki-config.yml not found")
+              sys.exit(1)
+          except yaml.YAMLError as e:
+              print(f"❌ YAML parsing error: {e}")
+              sys.exit(1)
+          EOF
+
+      - name: Check Promtail configuration
+        run: |
+          echo "📋 Checking Promtail configuration..."
+          python << 'EOF'
+          import yaml
+          import sys
+
+          try:
+              with open('promtail/promtail-config.yml', 'r') as f:
+                  content = f.read()
+                  lines = [l for l in content.split('\n') if l.strip() and not l.strip().startswith('#')]
+                  if not lines:
+                      print("❌ Promtail config is empty or only has comments")
+                      sys.exit(1)
+
+                  config = yaml.safe_load(content)
+                  if config is None:
+                      print("❌ Promtail config is empty")
+                      sys.exit(1)
+
+                  required = ['server', 'positions', 'clients', 'scrape_configs']
+                  missing = [r for r in required if r not in config]
+
+                  if missing:
+                      print(f"❌ Missing required sections: {', '.join(missing)}")
+                      sys.exit(1)
+
+                  # Check client URL
+                  if 'clients' in config and config['clients']:
+                      url = config['clients'][0].get('url', '')
+                      if 'loki' not in url and '3100' not in url:
+                          print("⚠️ Warning: Client URL should point to Loki")
+
+                  print("✅ Promtail configuration is valid!")
+
+          except FileNotFoundError:
+              print("❌ promtail/promtail-config.yml not found")
+              sys.exit(1)
+          except yaml.YAMLError as e:
+              print(f"❌ YAML parsing error: {e}")
+              sys.exit(1)
+          EOF
+
+      - name: Check Grafana datasource
+        run: |
+          echo "📈 Checking Grafana datasource configuration..."
+          python << 'EOF'
+          import yaml
+          import sys
+
+          try:
+              with open('grafana/provisioning/datasources/loki.yml', 'r') as f:
+                  content = f.read()
+                  lines = [l for l in content.split('\n') if l.strip() and not l.strip().startswith('#')]
+                  if not lines:
+                      print("❌ Grafana datasource config is empty or only has comments")
+                      sys.exit(1)
+
+                  config = yaml.safe_load(content)
+                  if config is None:
+                      print("❌ Grafana datasource config is empty")
+                      sys.exit(1)
+
+                  if 'datasources' not in config or not config['datasources']:
+                      print("❌ No datasources defined")
+                      sys.exit(1)
+
+                  # Check for Loki datasource
+                  loki_found = False
+                  for ds in config['datasources']:
+                      if ds.get('type') == 'loki':
+                          loki_found = True
+                          break
+
+                  if not loki_found:
+                      print("❌ No Loki datasource found (type should be 'loki')")
+                      sys.exit(1)
+
+                  print("✅ Grafana datasource configuration is valid!")
+
+          except FileNotFoundError:
+              print("❌ grafana/provisioning/datasources/loki.yml not found")
+              sys.exit(1)
+          except yaml.YAMLError as e:
+              print(f"❌ YAML parsing error: {e}")
+              sys.exit(1)
+          EOF
+
+      - name: Start logging stack
+        run: |
+          echo "🚀 Starting logging stack with Docker Compose..."
+          docker-compose up -d
+
+          echo "⏳ Waiting for services to start..."
+          sleep 30
+
+      - name: Check services health
+        run: |
+          echo "🏥 Checking service health..."
+
+          # Check Loki
+          echo "Checking Loki..."
+          curl -f http://localhost:3100/ready && echo "✅ Loki is ready" || echo "❌ Loki is not ready"
+
+          # Check Grafana
+          echo "Checking Grafana..."
+          curl -f http://localhost:3000/api/health && echo "✅ Grafana is ready" || echo "❌ Grafana is not ready"
+
+          # Show container status
+          echo ""
+          echo "📦 Container status:"
+          docker-compose ps
+
+      - name: Check for logs in Loki
+        run: |
+          echo "📝 Checking if logs are flowing to Loki..."
+          sleep 10
+
+          # Query Loki for any logs
+          response=$(curl -s 'http://localhost:3100/loki/api/v1/query?query={job=~".+"}' | python -c "import sys, json; data=json.load(sys.stdin); print(len(data.get('data', {}).get('result', [])))")
+
+          if [ "$response" -gt "0" ]; then
+            echo "✅ Logs are flowing to Loki! Found streams."
+          else
+            echo "⚠️ No logs found yet. This might be expected if the app just started."
+          fi
+
+      - name: Display logs on failure
+        if: failure()
+        run: |
+          echo "📋 Docker Compose logs:"
+          docker-compose logs
+
+      - name: Cleanup
+        if: always()
+        run: |
+          echo "🧹 Cleaning up..."
+          docker-compose down -v
+
+      - name: Summary
+        run: |
+          echo ""
+          echo "=========================================="
+          echo "🎉 Logging Stack Challenge - Complete!"
+          echo "=========================================="
+          echo ""
+          echo "Your logging stack configuration has been validated."
+          echo ""
+          echo "Next steps:"
+          echo "  1. Run locally with: docker-compose up -d"
+          echo "  2. Open Grafana at: http://localhost:3000"
+          echo "  3. Explore logs using LogQL queries"
+          echo ""

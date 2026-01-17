@@ -1,0 +1,73 @@
+{
+  "name": "logging-stack",
+  "title": "Centralized Logging with Loki, Promtail & Grafana",
+  "description": "Learn centralized logging by building a complete logging stack using Grafana Loki, Promtail, and Grafana for visualization.",
+  "difficulty": "beginner",
+  "estimated_time": "2-3 hours",
+  "category": "observability",
+  "tags": ["logging", "loki", "promtail", "grafana", "docker", "devops", "observability"],
+  "prerequisites": [
+    "Basic Docker knowledge",
+    "Understanding of YAML syntax",
+    "Familiarity with command line"
+  ],
+  "learning_objectives": [
+    "Understand centralized logging concepts",
+    "Configure Loki for log storage",
+    "Set up Promtail for log collection",
+    "Create Grafana dashboards for log visualization",
+    "Write LogQL queries to analyze logs",
+    "Understand structured logging best practices"
+  ],
+  "tasks": [
+    {
+      "id": 1,
+      "name": "Configure Loki",
+      "description": "Set up Loki configuration for log storage",
+      "file": "loki/loki-config.yml",
+      "points": 20
+    },
+    {
+      "id": 2,
+      "name": "Configure Promtail",
+      "description": "Set up Promtail to collect logs from containers",
+      "file": "promtail/promtail-config.yml",
+      "points": 25
+    },
+    {
+      "id": 3,
+      "name": "Configure Grafana Data Source",
+      "description": "Connect Grafana to Loki",
+      "file": "grafana/provisioning/datasources/loki.yml",
+      "points": 15
+    },
+    {
+      "id": 4,
+      "name": "Start the Stack",
+      "description": "Run docker-compose and verify all services are healthy",
+      "points": 20
+    },
+    {
+      "id": 5,
+      "name": "Query Logs",
+      "description": "Use LogQL to query and filter logs in Grafana",
+      "points": 20
+    }
+  ],
+  "total_points": 100,
+  "passing_score": 70,
+  "resources": [
+    {
+      "name": "Grafana Loki Documentation",
+      "url": "https://grafana.com/docs/loki/latest/"
+    },
+    {
+      "name": "Promtail Documentation",
+      "url": "https://grafana.com/docs/loki/latest/clients/promtail/"
+    },
+    {
+      "name": "LogQL Query Language",
+      "url": "https://grafana.com/docs/loki/latest/logql/"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+# =============================================================================
+# SOLUTION: Grafana Loki Data Source Configuration
+# =============================================================================
+# This is the complete solution for the Grafana data source configuration.
+# Students should try to complete the TODO file first before looking here!
+# =============================================================================
+
+apiVersion: 1
+
+# Delete existing datasources with the same name before creating
+deleteDatasources:
+  - name: Loki
+    orgId: 1
+
+# Define datasources
+datasources:
+  # Loki data source for log queries
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    isDefault: true
+    editable: false
+    jsonData:
+      maxLines: 1000
+      derivedFields:
+        # Example: Extract trace IDs and link to Jaeger (for future use)
+        - name: TraceID
+          matcherRegex: "trace_id=(\\w+)"
+          url: 'http://localhost:16686/trace/$${__value.raw}'
+          datasourceUid: jaeger

@@ -1,0 +1,93 @@
+# =============================================================================
+# SOLUTION: Promtail Configuration
+# =============================================================================
+# This is the complete solution for the Promtail configuration.
+# Students should try to complete the TODO file first before looking here!
+# =============================================================================
+
+# Server configuration - Promtail exposes an HTTP server
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+# Positions file - tracks where Promtail left off reading logs
+positions:
+  filename: /tmp/positions.yaml
+
+# Clients - where to send the logs (Loki)
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+# Scrape configurations - what logs to collect
+scrape_configs:
+  # Scrape Docker container logs
+  - job_name: docker
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: docker
+          __path__: /var/lib/docker/containers/*/*-json.log
+
+    # Pipeline stages to process logs
+    pipeline_stages:
+      # Parse Docker JSON log format
+      - json:
+          expressions:
+            output: log
+            stream: stream
+            timestamp: time
+
+      # Extract container labels
+      - json:
+          expressions:
+            container_name: attrs.container_name
+          source: output
+
+      # Set the log line to the actual message
+      - output:
+          source: output
+
+      # Parse timestamp
+      - timestamp:
+          source: timestamp
+          format: RFC3339Nano
+
+      # Add labels
+      - labels:
+          stream:
+          container_name:
+
+  # Alternative: Scrape from file path matching
+  - job_name: containers
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: containers
+          __path__: /var/log/containers/*.log
+
+  # Scrape application logs directly (if mounted)
+  - job_name: webapp
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: webapp
+          app: logging-demo
+          __path__: /var/log/app/*.log
+
+    pipeline_stages:
+      # Match common log format: timestamp level [logger] message
+      - regex:
+          expression: '^(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) (?P<level>\w+) \[(?P<logger>\w+)\] (?P<message>.*)$'
+
+      # Add extracted fields as labels
+      - labels:
+          level:
+          logger:
+
+      # Parse timestamp
+      - timestamp:
+          source: timestamp
+          format: '2006-01-02 15:04:05'

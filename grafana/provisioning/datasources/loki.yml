@@ -1,0 +1,27 @@
+# Grafana Loki Data Source - STARTER FILE
+# ========================================
+# TODO: Configure Loki as a data source for Grafana!
+#
+# This file tells Grafana how to connect to Loki.
+#
+# Requirements:
+# - Add Loki as a data source
+# - Set the correct URL (http://loki:3100)
+# - Make it the default for logs
+#
+# See README.md for detailed guidance!
+
+# =============================================================================
+# TODO: Configure the Loki data source
+# =============================================================================
+# apiVersion: 1
+#
+# datasources:
+#   - name: Loki
+#     type: loki
+#     access: proxy
+#     url: http://loki:3100
+#     isDefault: true
+#     editable: false
+#     jsonData:
+#       maxLines: 1000

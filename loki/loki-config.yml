@@ -1,0 +1,74 @@
+# Loki Configuration - STARTER FILE
+# ==================================
+# TODO: Configure Loki to store and query logs!
+#
+# Loki is the log storage system. It:
+# - Receives logs from Promtail
+# - Indexes them by labels (not full-text)
+# - Provides fast queries via LogQL
+#
+# Requirements:
+# - Disable authentication (for local dev)
+# - Configure HTTP and gRPC ports
+# - Set up filesystem storage
+# - Configure schema and retention
+#
+# See README.md for detailed guidance!
+
+# =============================================================================
+# STEP 1: Authentication
+# =============================================================================
+# TODO: Disable auth for local development
+# auth_enabled: false
+
+# =============================================================================
+# STEP 2: Server Configuration
+# =============================================================================
+# TODO: Configure server ports
+# server:
+#   http_listen_port: 3100
+#   grpc_listen_port: 9096
+
+# =============================================================================
+# STEP 3: Common Configuration
+# =============================================================================
+# TODO: Configure storage paths and replication
+# common:
+#   path_prefix: /loki
+#   storage:
+#     filesystem:
+#       chunks_directory: /loki/chunks
+#       rules_directory: /loki/rules
+#   replication_factor: 1
+#   ring:
+#     instance_addr: 127.0.0.1
+#     kvstore:
+#       store: inmemory
+
+# =============================================================================
+# STEP 4: Schema Configuration
+# =============================================================================
+# TODO: Configure how logs are indexed
+# schema_config:
+#   configs:
+#     - from: 2020-10-24
+#       store: boltdb-shipper
+#       object_store: filesystem
+#       schema: v11
+#       index:
+#         prefix: index_
+#         period: 24h
+
+# =============================================================================
+# STEP 5: Retention Configuration
+# =============================================================================
+# TODO: Configure log retention (7 days)
+# limits_config:
+#   retention_period: 168h
+
+# =============================================================================
+# STEP 6: Ruler Configuration (for alerts)
+# =============================================================================
+# TODO: Configure alertmanager URL (optional)
+# ruler:
+#   alertmanager_url: http://localhost:9093

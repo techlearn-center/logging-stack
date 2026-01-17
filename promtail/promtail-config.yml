@@ -1,0 +1,94 @@
+# Promtail Configuration - STARTER FILE
+# ======================================
+# TODO: Configure Promtail to collect and ship logs!
+#
+# Promtail is the log collector. It:
+# - Watches Docker containers or log files
+# - Adds labels (metadata) to logs
+# - Ships logs to Loki
+#
+# Think of it as a delivery truck that picks up logs
+# and delivers them to the Loki warehouse.
+#
+# Requirements:
+# - Configure Loki endpoint (where to send logs)
+# - Set up job to scrape Docker container logs
+# - Add labels for job name, container name
+# - Configure pipeline stages to extract log level
+#
+# See README.md for detailed guidance!
+
+# =============================================================================
+# STEP 1: Server Configuration
+# =============================================================================
+# TODO: Configure Promtail's HTTP server
+# server:
+#   http_listen_port: 9080
+#   grpc_listen_port: 0
+
+# =============================================================================
+# STEP 2: Positions File
+# =============================================================================
+# TODO: Configure where to store read positions
+# (This remembers where Promtail left off if it restarts)
+# positions:
+#   filename: /tmp/positions.yaml
+
+# =============================================================================
+# STEP 3: Loki Client Configuration
+# =============================================================================
+# TODO: Configure where to send logs
+# clients:
+#   - url: http://loki:3100/loki/api/v1/push
+
+# =============================================================================
+# STEP 4: Scrape Configuration
+# =============================================================================
+# TODO: Configure what logs to collect
+#
+# scrape_configs:
+#   # Scrape Docker container logs
+#   - job_name: containers
+#     static_configs:
+#       - targets:
+#           - localhost
+#         labels:
+#           job: containerlogs
+#           __path__: /var/lib/docker/containers/*/*.log
+#
+#     # Pipeline stages process logs before sending
+#     pipeline_stages:
+#       # Parse Docker JSON log format
+#       - json:
+#           expressions:
+#             output: log
+#             stream: stream
+#             attrs:
+#
+#       # Extract container name from attrs
+#       - json:
+#           expressions:
+#             tag:
+#           source: attrs
+#
+#       # Parse container name
+#       - regex:
+#           expression: (?P<container_name>(?:[^|]*[^|]))
+#           source: tag
+#
+#       # Add container_name as label
+#       - labels:
+#           container_name:
+#           stream:
+#
+#       # Extract log level from log line
+#       - regex:
+#           expression: '(?P<level>(DEBUG|INFO|WARNING|ERROR|CRITICAL))'
+#           source: output
+#
+#       - labels:
+#           level:
+#
+#       # Use the actual log content
+#       - output:
+#           source: output

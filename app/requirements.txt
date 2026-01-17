@@ -1,0 +1,2 @@
+# Requirements for Sample Logging Application
+# No external dependencies needed - using standard library only

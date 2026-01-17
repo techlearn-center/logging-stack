@@ -1,0 +1,56 @@
+# Logging Stack Challenge - .gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Loki data
+loki-data/
+loki/data/
+chunks/
+wal/
+
+# Promtail
+promtail/positions.yaml
+positions.yaml
+
+# Grafana
+grafana-data/
+grafana/data/
+
+# Docker
+.docker/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs (we want logs in the container, not committed)
+*.log
+logs/
+
+# Environment files
+.env
+.env.local
+*.env
+
+# Test outputs
+.pytest_cache/
+.coverage
+htmlcov/
